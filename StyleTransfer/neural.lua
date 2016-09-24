@@ -5,22 +5,6 @@ require 'loadcaffe'
 require 'optim'
 require 'image'
 
-function pre_process(img)
-  local mean = torch.DoubleTensor({103.939, 116.779, 123.68})
-  img = img:mul(256.0)
-  mean = mean_pixel:view(3, 1, 1):expandAs(img)
-  img:add(-mean_pixel)
-  return img
-end
-
-function post_process(img)
-  local mean = torch.DoubleTensor({103.939, 116.779, 123.68})
-  mean = mean:view(3, 1, 1):expandAs(img)
-  img:add(mean_pixel)
-  img = img:div(256.0)
-  return img
-end
-
 -- Create a custom loss module for the content and insert this in the network
 
 local ContentLoss, parent = torch.class('nn.ContentLoss', 'nn.Module')
@@ -55,7 +39,7 @@ end
 
 local new_net = nn.Sequential()
 local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVRC_19_layers.caffemodel', 'nn'):double()
-local content_image = image.load('tubingen.jpg', 3)
+local content_image = image.load('InputContentImages/golden_gate.jpg', 3)
 -- Convert the image to a 512x512 size
 content_image = image.scale(content_image, 512, 'bilinear')
 

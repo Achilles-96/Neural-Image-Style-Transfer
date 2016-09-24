@@ -1,0 +1,326 @@
+Successfully loaded VGG_ILSVRC_19_layers.caffemodel
+conv1_1: 64 3 3 3
+conv1_2: 64 64 3 3
+conv2_1: 128 64 3 3
+conv2_2: 128 128 3 3
+conv3_1: 256 128 3 3
+conv3_2: 256 256 3 3
+conv3_3: 256 256 3 3
+conv3_4: 256 256 3 3
+conv4_1: 512 256 3 3
+conv4_2: 512 512 3 3
+conv4_3: 512 512 3 3
+conv4_4: 512 512 3 3
+conv5_1: 512 512 3 3
+conv5_2: 512 512 3 3
+conv5_3: 512 512 3 3
+conv5_4: 512 512 3 3
+fc6: 1 1 25088 4096
+fc7: 1 1 4096 4096
+fc8: 1 1 4096 1000
+Running optimizer now....	
+Forward complete	
+GradInput generated	
+Iteration: 	
+1	
+Total Loss: 	
+84.905730453076	
+Saving image	
+Completed saving image	
+<optim.lbfgs> 	creating recyclable direction/step/history buffers	
+Forward complete	
+GradInput generated	
+Iteration: 	
+2	
+Total Loss: 	
+84.901429243227	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+3	
+Total Loss: 	
+80.657028560909	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+4	
+Total Loss: 	
+71.726175937027	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+5	
+Total Loss: 	
+60.055409758905	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+6	
+Total Loss: 	
+50.198008623817	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+7	
+Total Loss: 	
+39.250137792718	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+8	
+Total Loss: 	
+28.149506194089	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+9	
+Total Loss: 	
+20.237139467501	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+10	
+Total Loss: 	
+15.511626179536	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+11	
+Total Loss: 	
+12.373523445777	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+12	
+Total Loss: 	
+10.184776519944	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+13	
+Total Loss: 	
+8.6739487063959	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+14	
+Total Loss: 	
+7.5450388087184	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+15	
+Total Loss: 	
+6.6448319684385	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+16	
+Total Loss: 	
+5.9987105749922	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+17	
+Total Loss: 	
+5.4663262047398	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+18	
+Total Loss: 	
+5.0073470183805	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+19	
+Total Loss: 	
+4.6320108048188	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+20	
+Total Loss: 	
+4.3305078631287	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+21	
+Total Loss: 	
+4.0765568380752	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+22	
+Total Loss: 	
+3.8078324934063	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+23	
+Total Loss: 	
+3.5816043300111	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+24	
+Total Loss: 	
+3.3936673795702	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+25	
+Total Loss: 	
+3.2290768763505	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+26	
+Total Loss: 	
+3.0679697821696	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+27	
+Total Loss: 	
+2.9347215421228	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+28	
+Total Loss: 	
+2.8077255984764	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+29	
+Total Loss: 	
+2.6895916676801	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+30	
+Total Loss: 	
+2.5809438157951	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+31	
+Total Loss: 	
+2.4785009683318	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+32	
+Total Loss: 	
+2.3810319544536	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+33	
+Total Loss: 	
+2.2949296109542	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+34	
+Total Loss: 	
+2.2141364202261	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+35	
+Total Loss: 	
+2.1395312774729	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+36	
+Total Loss: 	
+2.0724552857062	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+37	
+Total Loss: 	
+2.0092227222452	
+Saving image	
+Completed saving image	
+Forward complete	
+GradInput generated	
+Iteration: 	
+38	
+Total Loss: 	
+1.9494067792321	
+Saving image	
+Completed saving image	
