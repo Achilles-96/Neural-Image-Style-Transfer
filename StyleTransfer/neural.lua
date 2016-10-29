@@ -16,6 +16,32 @@ function GramMat()
   return network
 end
 
+-- Create a custom loss module for the image as a regularization
+
+local RegularizeLoss, parent = torch.class('nn.RegularizeLoss', 'nn.Module')
+
+function RegularizeLoss:__init()
+  parent.__init(self)
+  self.loss = 0
+  self.criterion = nn.MSECriterion()
+end
+
+function RegularizeLoss:updateGradInput(input, gradOutput)
+  local required = torch.randn(input:size()):zero()
+  self.gradInput = self.criterion:backward(input, required):div(input:nElement())
+  self.gradInput:mul(1e8)
+  self.gradInput:add(gradOutput)
+  return self.gradInput
+end
+
+function RegularizeLoss:updateOutput(input)
+  self.output = input
+  local required = torch.randn(input:size()):zero()
+  self.loss = self.criterion:forward(input, required) / (input:nElement())
+  self.loss = self.loss * (1e8)
+  return self.output
+end
+
 -- Create a custom loss module for the style and insert this in the network
 
 local StyleLoss, parent = torch.class('nn.StyleLoss', 'nn.Module')
@@ -82,15 +108,13 @@ function ContentLoss:updateOutput(input)
   return self.output
 end
 
--- End of content loss module
-
-
 local new_net = nn.Sequential()
 local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVRC_19_layers.caffemodel', 'nn'):double()
-local content_image = image.load('InputContentImages/golden_gate.jpg', 3)
-local style_image = image.load('InputStyleImages/paintings1.jpg', 3)
+local content_image = image.load('InputContentImages/tubingen.jpg', 3)
+local style_image = image.load('InputStyleImages/shipwreck.jpg', 3)
 -- Convert the image to a 512x512 size
 content_image = image.scale(content_image, 512, 'bilinear')
+style_image = image.scale(style_image, 512, 'bilinear')
 
 -- Generally we select relu layers at the further end of the network to apply content losses
 local content_layers = {}
@@ -98,14 +122,16 @@ local content_layers = {}
 local style_layers = {}
 content_layers[1] = 'relu4_2'
 style_layers[1] = 'relu1_1'
+style_layers[2] = 'relu2_1'
 style_layers[3] = 'relu3_1'
-style_layers[5] = 'relu5_1'
 
 local content_losses = {}
 local style_losses = {}
 local content_idx = 1
 local style_idx = 1
 
+regularize_loss_module = nn.RegularizeLoss()
+new_net:add(regularize_loss_module)
 for i=1, #vggnet do
   if content_idx <= #content_layers or style_idx <= #style_layers then
     local cur_layer = vggnet:get(i)
@@ -129,16 +155,6 @@ for i=1, #vggnet do
       style_idx = style_idx + 1
     end
   end
-end
-
--- This could be removed
-for i=1,#new_net.modules do
-    local module = new_net.modules[i]
-    if torch.type(module) == 'nn.SpatialConvolutionMM' then
-        -- remove these, since they are not used
-        module.gradWeight = nil
-        module.gradBias = nil
-    end
 end
 
 local new_img = nil
@@ -175,11 +191,14 @@ function feval(x)
     for _, style_loss in ipairs(style_losses) do
       s_loss = loss + style_loss.loss
     end
+    r_loss = regularize_loss_module.loss
     print 'Style Loss'
     print (s_loss)
+    print 'Regularize Loss'
+    print (r_loss)
     print 'Iteration: '
     print(cur_iter)
-    loss = s_loss + c_loss
+    loss = s_loss + c_loss + r_loss
     print 'Total Loss: '
     print(loss)
 
