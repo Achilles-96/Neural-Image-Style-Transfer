@@ -1,9 +1,54 @@
 require 'nn'
-
 require 'loadcaffe'
-
 require 'optim'
 require 'image'
+
+-- Define a network which computes the gram matrix
+
+function GramMat()
+  local network = nn.Sequential()
+  network:add(nn.View(-1):setNumInputDims(2))
+  local conc = nn.ConcatTable()
+  conc:add(nn.Identity())
+  conc:add(nn.Identity())
+  network:add(conc)
+  network:add(nn.MM(false,true))
+  return network
+end
+
+-- Create a custom loss module for the style and insert this in the network
+
+local StyleLoss, parent = torch.class('nn.StyleLoss', 'nn.Module')
+
+function StyleLoss:__init(target)
+  parent.__init(self)
+  self.target = target
+  self.loss = 0
+  self.gram = GramMat()
+  self.criterion = nn.MSECriterion()
+end
+
+function StyleLoss:updateGradInput(input, gradOutput)
+  local G = self.gram:forward(input)
+  G:div(input:nElement())
+  -- This is the error at the gram matrix output
+  local dG = self.criterion:backward(G, self.target)
+  dG:div(input:nElement())
+  -- Backprop the error to get the deltas at the input to the gram matrix (ie the deltas at this StyleLoss layer)
+  self.gradInput = self.gram:backward(input, dG)
+  -- Add this error to the current error
+  self.gradInput:add(gradOutput)
+  return self.gradInput
+end
+
+function StyleLoss:updateOutput(input)
+  local G = self.gram:forward(input)
+  G:div(input:nElement())
+  self.loss = self.criterion:forward(G, self.target)
+  self.loss = self.loss
+  self.output = input
+  return self.output
+end
 
 -- Create a custom loss module for the content and insert this in the network
 
@@ -43,8 +88,10 @@ local content_image = image.load('InputContentImages/golden_gate.jpg', 3)
 -- Convert the image to a 512x512 size
 content_image = image.scale(content_image, 512, 'bilinear')
 
--- Generally we select relu layers to apply content losses
+-- Generally we select relu layers at the further end of the network to apply content losses
 local content_layers = {}
+-- Generally we select the relu layers at the start of the network to apply the style losses
+local style_layers = {}
 content_layers[1] = 'relu4_2'
 
 local content_losses = {}
