@@ -37,6 +37,7 @@ function StyleLoss:updateGradInput(input, gradOutput)
   -- Backprop the error to get the deltas at the input to the gram matrix (ie the deltas at this StyleLoss layer)
   self.gradInput = self.gram:backward(input, dG)
   -- Add this error to the current error
+  self.gradInput:mul(4e6)
   self.gradInput:add(gradOutput)
   return self.gradInput
 end
@@ -45,7 +46,7 @@ function StyleLoss:updateOutput(input)
   local G = self.gram:forward(input)
   G:div(input:nElement())
   self.loss = self.criterion:forward(G, self.target)
-  self.loss = self.loss
+  self.loss = self.loss * 4e6
   self.output = input
   return self.output
 end
@@ -67,6 +68,7 @@ function ContentLoss:updateGradInput(input, gradOut)
     self.gradInput = self.criterion:backward(input, self.target)
   end
   -- Add this error to the current error
+  self.gradInput:mul(5.0)
   self.gradInput:add(gradOut)
   return self.gradInput
 end
@@ -75,6 +77,7 @@ function ContentLoss:updateOutput(input)
   self.output = input
   if self.target:nElement() == input:nElement() then
     self.loss = self.criterion:forward(input, self.target)
+    self.loss = self.loss * 5.0
   end
   return self.output
 end
@@ -85,6 +88,7 @@ end
 local new_net = nn.Sequential()
 local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVRC_19_layers.caffemodel', 'nn'):double()
 local content_image = image.load('InputContentImages/golden_gate.jpg', 3)
+local style_image = image.load('InputStyleImages/paintings1.jpg', 3)
 -- Convert the image to a 512x512 size
 content_image = image.scale(content_image, 512, 'bilinear')
 
@@ -93,12 +97,17 @@ local content_layers = {}
 -- Generally we select the relu layers at the start of the network to apply the style losses
 local style_layers = {}
 content_layers[1] = 'relu4_2'
+style_layers[1] = 'relu1_1'
+style_layers[3] = 'relu3_1'
+style_layers[5] = 'relu5_1'
 
 local content_losses = {}
+local style_losses = {}
 local content_idx = 1
+local style_idx = 1
 
 for i=1, #vggnet do
-  if content_idx <= #content_layers then
+  if content_idx <= #content_layers or style_idx <= #style_layers then
     local cur_layer = vggnet:get(i)
     local layer_type = torch.type(cur_layer)
     new_net:add(cur_layer)
@@ -109,17 +118,28 @@ for i=1, #vggnet do
       new_net:add(content_loss_module)
       content_idx = content_idx + 1
     end
+    if cur_layer.name == style_layers[style_idx] then
+      local GramM = GramMat()
+      local target_layer = new_net:forward(style_image):clone()
+      local target = GramM:forward(target_layer):clone()
+      target:div(target_layer:nElement())
+      local style_loss_module = nn.StyleLoss(target):double()
+      table.insert(style_losses, style_loss_module)
+      new_net:add(style_loss_module)
+      style_idx = style_idx + 1
+    end
   end
 end
 
+-- This could be removed
 for i=1,#new_net.modules do
     local module = new_net.modules[i]
     if torch.type(module) == 'nn.SpatialConvolutionMM' then
-        -- remove these, not used, but uses gpu memory
+        -- remove these, since they are not used
         module.gradWeight = nil
         module.gradBias = nil
     end
-  end
+end
 
 local new_img = nil
 new_img = torch.randn(content_image:size()):double():mul(0.001)
@@ -138,17 +158,28 @@ optim_state = {
 cur_iter = 1
 
 function feval(x)
+    print 'Checking'
     new_net:forward(x)
     print 'Forward complete'
     local grad = new_net:updateGradInput(x, dnew_img_out)
     print 'GradInput generated'
+    local c_loss = 0
+    local s_loss = 0
     local loss = 0
     -- To calculate the loss currently
     for _, content_loss in ipairs(content_losses) do
-      loss = loss + content_loss.loss
+      c_loss = loss + content_loss.loss
     end
+    print 'Content Loss'
+    print (c_loss)
+    for _, style_loss in ipairs(style_losses) do
+      s_loss = loss + style_loss.loss
+    end
+    print 'Style Loss'
+    print (s_loss)
     print 'Iteration: '
     print(cur_iter)
+    loss = s_loss + c_loss
     print 'Total Loss: '
     print(loss)
 
