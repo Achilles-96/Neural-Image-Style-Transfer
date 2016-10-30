@@ -49,7 +49,7 @@ function RegularizeLoss:updateGradInput(input, gradOutput)
     required = required:cuda()
   end
   self.gradInput = self.criterion:backward(input, required):div(input:nElement())
-  self.gradInput:mul(5e3)
+  self.gradInput:mul(5e4)
   self.gradInput:add(gradOutput)
   return self.gradInput
 end
@@ -61,7 +61,7 @@ function RegularizeLoss:updateOutput(input)
     required = required:cuda()
   end
   self.loss = self.criterion:forward(input, required) / (input:nElement())
-  self.loss = self.loss * (5e3)
+  self.loss = self.loss * (5e4)
   return self.output
 end
 
@@ -123,7 +123,7 @@ function ContentLoss:updateGradInput(input, gradOut)
     self.gradInput = self.criterion:backward(input, self.target)
   end
   -- Add this error to the current error
-  self.gradInput:mul(4.0)
+  self.gradInput:mul(5.0)
   self.gradInput:add(gradOut)
   return self.gradInput
 end
@@ -132,7 +132,7 @@ function ContentLoss:updateOutput(input)
   self.output = input
   if self.target:nElement() == input:nElement() then
     self.loss = self.criterion:forward(input, self.target)
-    self.loss = self.loss * 4.0
+    self.loss = self.loss * 5.0
   end
   return self.output
 end
@@ -149,7 +149,7 @@ function preproc(img)
 end
 
 -- Undo the above preprocessing.
-function deproc(img)
+function postproc(img)
   local mean = torch.DoubleTensor({104, 117, 124})
   mean = mean:view(3, 1, 1):expandAs(img)
   img = img + mean
@@ -160,11 +160,14 @@ end
 
 local new_net = nn.Sequential()
 local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVRC_19_layers.caffemodel', 'nn'):double()
-local content_image = image.load('InputContentImages/tubingen.jpg', 3)
-local style_image = image.load('InputStyleImages/shipwreck.jpg', 3)
+local content_image = image.load('InputContentImages/brad_pitt.jpg', 3)
+local style_image = image.load('InputStyleImages/seated-nude.jpg', 3)
 -- Convert the image to a 512x512 size
 content_image = preproc(image.scale(content_image, 512, 'bilinear'))
 style_image = preproc(image.scale(style_image, 512, 'bilinear'))
+gaussian_filter = torch.Tensor(3,3):fill(1)
+gaussian_filter = gaussian_filter:div(gaussian_filter:sum())
+content_image = image.convolve(content_image, gaussian_filter)
 
 if use_gpu == 1 then
   content_image = content_image:cuda()
@@ -246,7 +249,7 @@ end
 
 local optim_state = nil
 optim_state = {
-  maxIter = 601,
+  maxIter = 1001,
   verbose=true,
 }
 
@@ -279,7 +282,7 @@ function feval(x)
       print 'Total Loss: '
       print(loss)
       print 'Saving image'
-      local res = deproc(new_img:clone():double())
+      local res = postproc(new_img:clone():double())
       local filename = "output-" .. cur_iter .. ".png" 
       image.save(filename, res)
       print 'Completed saving image'
