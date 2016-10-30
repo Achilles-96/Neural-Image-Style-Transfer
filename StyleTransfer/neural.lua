@@ -2,6 +2,7 @@ require 'nn'
 require 'loadcaffe'
 require 'optim'
 require 'image'
+require 'tvloss'
 
 -- Define a network which computes the gram matrix
 
@@ -137,8 +138,10 @@ local style_losses = {}
 local content_idx = 1
 local style_idx = 1
 
-regularize_loss_module = nn.RegularizeLoss()
+local tv_loss_module = nn.TVLoss():float()
+local regularize_loss_module = nn.RegularizeLoss()
 new_net:add(regularize_loss_module)
+new_net:add(tv_loss_module)
 for i=1, #vggnet do
   if content_idx <= #content_layers or style_idx <= #style_layers then
     local cur_layer = vggnet:get(i)
