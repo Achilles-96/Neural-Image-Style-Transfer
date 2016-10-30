@@ -5,15 +5,22 @@ require 'image'
 
 -- Define a network which computes the gram matrix
 
-function GramMat()
-  local network = nn.Sequential()
-  network:add(nn.View(-1):setNumInputDims(2))
-  local conc = nn.ConcatTable()
-  conc:add(nn.Identity())
-  conc:add(nn.Identity())
-  network:add(conc)
-  network:add(nn.MM(false,true))
-  return network
+function GramMatrix()
+  local net = nn.Sequential()
+  -- Set input as batches with the last 2 dimensions belonging to each input.
+  -- The last 2 dimensions are merged and flattened into a 1D array
+  net:add(nn.View(-1):setNumInputDims(2))
+  -- A concat table essentially takes the input given to it and runs the
+  -- different modules in the concat table in parallel.
+  local concat = nn.ConcatTable()
+  -- Identity passes the input as the output without any changes
+  concat:add(nn.Identity())
+  concat:add(nn.Identity())
+  net:add(concat)
+  -- MM multiplies two input matrices by computing a dot product. The parameters
+  -- false, true indicate if the matrices should be transposed or not.
+  net:add(nn.MM(false, true))
+  return net
 end
 
 -- Create a custom loss module for the image as a regularization
