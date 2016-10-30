@@ -7,7 +7,7 @@ local TVLoss, parent = torch.class('nn.TVLoss', 'nn.Module')
 
 function TVLoss:__init()
   parent.__init(self)
-  self.strength = 1e-5
+  self.strength = 1e-3
   self.x_diff = torch.Tensor()
   self.y_diff = torch.Tensor()
 end

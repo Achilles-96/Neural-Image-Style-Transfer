@@ -49,7 +49,7 @@ function RegularizeLoss:updateGradInput(input, gradOutput)
     required = required:cuda()
   end
   self.gradInput = self.criterion:backward(input, required):div(input:nElement())
-  self.gradInput:mul(1e8)
+  self.gradInput:mul(5e3)
   self.gradInput:add(gradOutput)
   return self.gradInput
 end
@@ -61,7 +61,7 @@ function RegularizeLoss:updateOutput(input)
     required = required:cuda()
   end
   self.loss = self.criterion:forward(input, required) / (input:nElement())
-  self.loss = self.loss * (1e8)
+  self.loss = self.loss * (5e3)
   return self.output
 end
 
@@ -89,7 +89,7 @@ function StyleLoss:updateGradInput(input, gradOutput)
   -- Backprop the error to get the deltas at the input to the gram matrix (ie the deltas at this StyleLoss layer)
   self.gradInput = self.gram:backward(input, dG)
   -- Add this error to the current error
-  self.gradInput:mul(4e6)
+  self.gradInput:mul(1e2)
   self.gradInput:add(gradOutput)
   return self.gradInput
 end
@@ -98,7 +98,7 @@ function StyleLoss:updateOutput(input)
   local G = self.gram:forward(input)
   G:div(input:nElement())
   self.loss = self.criterion:forward(G, self.target)
-  self.loss = self.loss * 4e6
+  self.loss = self.loss * 1e2
   self.output = input
   return self.output
 end
@@ -123,7 +123,7 @@ function ContentLoss:updateGradInput(input, gradOut)
     self.gradInput = self.criterion:backward(input, self.target)
   end
   -- Add this error to the current error
-  self.gradInput:mul(5.0)
+  self.gradInput:mul(4.0)
   self.gradInput:add(gradOut)
   return self.gradInput
 end
@@ -132,18 +132,39 @@ function ContentLoss:updateOutput(input)
   self.output = input
   if self.target:nElement() == input:nElement() then
     self.loss = self.criterion:forward(input, self.target)
-    self.loss = self.loss * 5.0
+    self.loss = self.loss * 4.0
   end
   return self.output
 end
+
+-- Pre and post processing of images
+-- Convert from [0,1] range to [0,255]
+function preproc(img)
+  -- This is what we observed from lots of training samples
+  local mean = torch.DoubleTensor({104, 117, 124})
+  img = img:mul(255.0)
+  mean = mean:view(3, 1, 1):expandAs(img)
+  img:add(-1, mean)
+  return img
+end
+
+-- Undo the above preprocessing.
+function deproc(img)
+  local mean = torch.DoubleTensor({104, 117, 124})
+  mean = mean:view(3, 1, 1):expandAs(img)
+  img = img + mean
+  img = img:div(255.0)
+  return img
+end
+
 
 local new_net = nn.Sequential()
 local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVRC_19_layers.caffemodel', 'nn'):double()
 local content_image = image.load('InputContentImages/tubingen.jpg', 3)
 local style_image = image.load('InputStyleImages/shipwreck.jpg', 3)
 -- Convert the image to a 512x512 size
-content_image = image.scale(content_image, 512, 'bilinear')
-style_image = image.scale(style_image, 512, 'bilinear')
+content_image = preproc(image.scale(content_image, 512, 'bilinear'))
+style_image = preproc(image.scale(style_image, 512, 'bilinear'))
 
 if use_gpu == 1 then
   content_image = content_image:cuda()
@@ -154,10 +175,13 @@ end
 local content_layers = {}
 -- Generally we select the relu layers at the start of the network to apply the style losses
 local style_layers = {}
+
 content_layers[1] = 'relu4_2'
+
 style_layers[1] = 'relu1_1'
 style_layers[2] = 'relu2_1'
 style_layers[3] = 'relu3_1'
+style_layers[4] = 'relu4_1'
 
 local content_losses = {}
 local style_losses = {}
@@ -222,7 +246,7 @@ end
 
 local optim_state = nil
 optim_state = {
-  maxIter = 1000,
+  maxIter = 601,
   verbose=true,
 }
 
@@ -255,8 +279,7 @@ function feval(x)
       print 'Total Loss: '
       print(loss)
       print 'Saving image'
-      local res = new_img:clone()
-      res = res:double():mul(255.0)
+      local res = deproc(new_img:clone():double())
       local filename = "output-" .. cur_iter .. ".png" 
       image.save(filename, res)
       print 'Completed saving image'
