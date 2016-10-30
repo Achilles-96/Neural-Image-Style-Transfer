@@ -3,10 +3,13 @@ require 'loadcaffe'
 require 'optim'
 require 'image'
 require 'tvloss'
+require 'cunn'
+
+local use_gpu = 1
 
 -- Define a network which computes the gram matrix
 
-function GramMatrix()
+function GramMat()
   local net = nn.Sequential()
   -- Set input as batches with the last 2 dimensions belonging to each input.
   -- The last 2 dimensions are merged and flattened into a 1D array
@@ -21,6 +24,9 @@ function GramMatrix()
   -- MM multiplies two input matrices by computing a dot product. The parameters
   -- false, true indicate if the matrices should be transposed or not.
   net:add(nn.MM(false, true))
+  if use_gpu == 1 then
+    net = net:cuda()
+  end
   return net
 end
 
@@ -32,10 +38,16 @@ function RegularizeLoss:__init()
   parent.__init(self)
   self.loss = 0
   self.criterion = nn.MSECriterion()
+  if use_gpu == 1 then
+    self.criterion = self.criterion:cuda()
+  end
 end
 
 function RegularizeLoss:updateGradInput(input, gradOutput)
   local required = torch.randn(input:size()):zero()
+  if use_gpu == 1 then
+    required = required:cuda()
+  end
   self.gradInput = self.criterion:backward(input, required):div(input:nElement())
   self.gradInput:mul(1e8)
   self.gradInput:add(gradOutput)
@@ -45,6 +57,9 @@ end
 function RegularizeLoss:updateOutput(input)
   self.output = input
   local required = torch.randn(input:size()):zero()
+  if use_gpu == 1 then
+    required = required:cuda()
+  end
   self.loss = self.criterion:forward(input, required) / (input:nElement())
   self.loss = self.loss * (1e8)
   return self.output
@@ -60,6 +75,9 @@ function StyleLoss:__init(target)
   self.loss = 0
   self.gram = GramMat()
   self.criterion = nn.MSECriterion()
+  if use_gpu == 1 then
+    self.criterion = self.criterion:cuda()
+  end
 end
 
 function StyleLoss:updateGradInput(input, gradOutput)
@@ -93,6 +111,9 @@ function ContentLoss:__init(target)
   parent.__init(self)
   self.target = target
   self.criterion = nn.MSECriterion()
+  if use_gpu == 1 then
+    self.criterion = self.criterion:cuda()
+  end
   self.loss = 0
 end
 
@@ -124,6 +145,11 @@ local style_image = image.load('InputStyleImages/shipwreck.jpg', 3)
 content_image = image.scale(content_image, 512, 'bilinear')
 style_image = image.scale(style_image, 512, 'bilinear')
 
+if use_gpu == 1 then
+  content_image = content_image:cuda()
+  style_image = style_image:cuda()
+end
+
 -- Generally we select relu layers at the further end of the network to apply content losses
 local content_layers = {}
 -- Generally we select the relu layers at the start of the network to apply the style losses
@@ -138,18 +164,28 @@ local style_losses = {}
 local content_idx = 1
 local style_idx = 1
 
-local tv_loss_module = nn.TVLoss():float()
+local tv_loss_module = nn.TVLoss()
 local regularize_loss_module = nn.RegularizeLoss()
-new_net:add(regularize_loss_module)
+if use_gpu == 1 then
+  tv_loss_module = tv_loss_module:cuda()
+  regularize_loss_mmodule = regularize_loss_module:cuda()
+end
 new_net:add(tv_loss_module)
+new_net:add(regularize_loss_module)
 for i=1, #vggnet do
   if content_idx <= #content_layers or style_idx <= #style_layers then
     local cur_layer = vggnet:get(i)
     local layer_type = torch.type(cur_layer)
     new_net:add(cur_layer)
+    if use_gpu == 1 then
+      new_net = new_net:cuda()
+    end
     if cur_layer.name == content_layers[content_idx] then
       local target = new_net:forward(content_image):clone()
       local content_loss_module = nn.ContentLoss(target):double()
+      if use_gpu == 1 then
+        content_loss_module = content_loss_module:cuda()
+      end
       table.insert(content_losses, content_loss_module)
       new_net:add(content_loss_module)
       content_idx = content_idx + 1
@@ -160,6 +196,9 @@ for i=1, #vggnet do
       local target = GramM:forward(target_layer):clone()
       target:div(target_layer:nElement())
       local style_loss_module = nn.StyleLoss(target):double()
+      if use_gpu == 1 then
+        style_loss_module = style_loss_module:cuda()
+      end
       table.insert(style_losses, style_loss_module)
       new_net:add(style_loss_module)
       style_idx = style_idx + 1
@@ -169,9 +208,15 @@ end
 
 local new_img = nil
 new_img = torch.randn(content_image:size()):double():mul(0.001)
+if use_gpu == 1 then
+  new_img = new_img:cuda()
+end
 
 local new_img_out = new_net:forward(new_img)
 local dnew_img_out = torch.randn(#new_img_out):zero()
+if use_gpu == 1 then
+  dnew_img_out = dnew_img_out:cuda()
+end
 
 -- Use the lbfgs optimizer for training
 
@@ -184,11 +229,8 @@ optim_state = {
 cur_iter = 1
 
 function feval(x)
-    print 'Checking'
     new_net:forward(x)
-    print 'Forward complete'
     local grad = new_net:updateGradInput(x, dnew_img_out)
-    print 'GradInput generated'
     local c_loss = 0
     local s_loss = 0
     local loss = 0
@@ -196,23 +238,22 @@ function feval(x)
     for _, content_loss in ipairs(content_losses) do
       c_loss = loss + content_loss.loss
     end
-    print 'Content Loss'
-    print (c_loss)
     for _, style_loss in ipairs(style_losses) do
       s_loss = loss + style_loss.loss
     end
     r_loss = regularize_loss_module.loss
-    print 'Style Loss'
-    print (s_loss)
-    print 'Regularize Loss'
-    print (r_loss)
-    print 'Iteration: '
-    print(cur_iter)
     loss = s_loss + c_loss + r_loss
-    print 'Total Loss: '
-    print(loss)
-
-    if 1 then
+    if cur_iter%20 == 1 then
+      print 'Content Loss'
+      print (c_loss)
+      print 'Style Loss'
+      print (s_loss)
+      print 'Regularize Loss'
+      print (r_loss)
+      print 'Iteration: '
+      print(cur_iter)
+      print 'Total Loss: '
+      print(loss)
       print 'Saving image'
       local res = new_img:clone()
       res = res:double():mul(255.0)
