@@ -160,8 +160,8 @@ end
 
 local new_net = nn.Sequential()
 local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVRC_19_layers.caffemodel', 'nn'):double()
-local content_image = image.load('InputContentImages/vishal.jpg', 3)
-local style_image = image.load('InputStyleImages/scenery4.jpg', 3)
+local content_image = image.load('InputContentImages/house.jpg', 3)
+local style_image = image.load('InputStyleImages/style2.jpg', 3)
 -- Convert the image to a 512x512 size
 content_image = preproc(image.scale(content_image, 512, 'bilinear'))
 style_image = preproc(image.scale(style_image, 512, 'bilinear'))
@@ -270,7 +270,7 @@ function feval(x)
     end
     r_loss = regularize_loss_module.loss
     loss = s_loss + c_loss + r_loss
-    if cur_iter%20 == 1 then
+    if cur_iter%1000 == 0 then
       print 'Content Loss'
       print (c_loss)
       print 'Style Loss'
