@@ -118,12 +118,15 @@ function ContentLoss:__init(target)
 end
 
 function ContentLoss:updateGradInput(input, gradOut)
+  -- print(self.target:size())
   if self.target:nElement() == input:nElement() then
     -- Consider this as an ouput layer and calculate the error
     self.gradInput = self.criterion:backward(input, self.target)
   end
   -- Add this error to the current error
   self.gradInput:mul(5.0)
+  -- print(self.gradInput:size())
+  -- print(gradOut:size())
   self.gradInput:add(gradOut)
   return self.gradInput
 end
@@ -163,10 +166,10 @@ local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVR
 
 -- Store all the content images from the laplacian stack here
 local content_images = {}
-content_images[1] = image.load('InputContentImagePyramid/bradd_pittl0.jpg', 3)
-content_images[2] = image.load('InputContentImagePyramid/bradd_pittl1.jpg', 3)
-content_images[3] = image.load('InputContentImagePyramid/bradd_pittl2.jpg', 3)
-content_images[4] = image.load('InputContentImagePyramid/bradd_pittl3.jpg', 3)
+content_images[1] = image.load('InputContentImagePyramids/brad_pittl0.jpg', 3)
+content_images[2] = image.load('InputContentImagePyramids/brad_pittl1.jpg', 3)
+content_images[3] = image.load('InputContentImagePyramids/brad_pittl2.jpg', 3)
+content_images[4] = image.load('InputContentImagePyramids/brad_pittl3.jpg', 3)
 
 local style_image = image.load('InputStyleImages/color.jpg', 3)
 -- Convert the image to a 512x512 size
@@ -229,7 +232,7 @@ for i=1, #vggnet do
       if use_gpu == 1 then
         content_loss_module = content_loss_module:cuda()
       end
-      table.insert(content_losses, content_loss_module1)
+      table.insert(content_losses, content_loss_module)
       new_net:add(content_loss_module)
       content_idx = content_idx + 1
     end
@@ -250,7 +253,7 @@ for i=1, #vggnet do
 end
 
 local new_img = nil
-new_img = torch.randn(content_image:size()):double():mul(0.001)
+new_img = torch.randn(content_images[1]:size()):double():mul(0.01)
 if use_gpu == 1 then
   new_img = new_img:cuda()
 end
