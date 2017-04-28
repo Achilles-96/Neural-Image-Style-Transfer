@@ -10,6 +10,8 @@ content_img = cv2.imread(content_img_path)
 
 result_file = content_file + '_' + style_file
 
+kernel = np.ones((3,3),np.float32)/9
+
 result_imgs = []
 for i in range(6):
     result_imgs.append(cv2.resize(cv2.imread('Results/' + result_file + '_' + str(i) + '.jpg'), (content_img.shape[1], content_img.shape[0])))
@@ -41,4 +43,5 @@ for color in map_colors:
                 final_img[x][y] = result_imgs[segment_num][x][y]
     segment_num += 1
 
-cv2.imwrite(content_file + '_' + style_file + '.jpg', final_img)
+kernel1 = np.ones((3,3),np.float32)/9
+cv2.imwrite(content_file + '_' + style_file + '.jpg', cv2.filter2D(final_img,-1,kernel1))

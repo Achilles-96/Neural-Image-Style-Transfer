@@ -89,7 +89,7 @@ function StyleLoss:updateGradInput(input, gradOutput)
   -- Backprop the error to get the deltas at the input to the gram matrix (ie the deltas at this StyleLoss layer)
   self.gradInput = self.gram:backward(input, dG)
   -- Add this error to the current error
-  self.gradInput:mul(1e2)
+  self.gradInput:mul(1e1)
   self.gradInput:add(gradOutput)
   return self.gradInput
 end
@@ -98,7 +98,7 @@ function StyleLoss:updateOutput(input)
   local G = self.gram:forward(input)
   G:div(input:nElement())
   self.loss = self.criterion:forward(G, self.target)
-  self.loss = self.loss * 1e2
+  self.loss = self.loss * 1e1
   self.output = input
   return self.output
 end
@@ -107,9 +107,10 @@ end
 
 local ContentLoss, parent = torch.class('nn.ContentLoss', 'nn.Module')
 
-function ContentLoss:__init(target)
+function ContentLoss:__init(target, weight)
   parent.__init(self)
   self.target = target
+  self.weight = weight
   self.criterion = nn.MSECriterion()
   if use_gpu == 1 then
     self.criterion = self.criterion:cuda()
@@ -124,7 +125,7 @@ function ContentLoss:updateGradInput(input, gradOut)
     self.gradInput = self.criterion:backward(input, self.target)
   end
   -- Add this error to the current error
-  self.gradInput:mul(5.0)
+  self.gradInput:mul(self.weight)
   -- print(self.gradInput:size())
   -- print(gradOut:size())
   self.gradInput:add(gradOut)
@@ -135,7 +136,7 @@ function ContentLoss:updateOutput(input)
   self.output = input
   if self.target:nElement() == input:nElement() then
     self.loss = self.criterion:forward(input, self.target)
-    self.loss = self.loss * 5.0
+    self.loss = self.loss * self.weight
   end
   return self.output
 end
@@ -166,12 +167,12 @@ local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVR
 
 -- Store all the content images from the laplacian stack here
 local content_images = {}
-content_images[1] = image.load('InputContentImagePyramids/brad_pittl3.jpg', 3)
-content_images[2] = image.load('InputContentImagePyramids/brad_pittl2.jpg', 3)
-content_images[3] = image.load('InputContentImagePyramids/brad_pittl1.jpg', 3)
-content_images[4] = image.load('InputContentImagePyramids/brad_pittl0.jpg', 3)
+content_images[1] = image.load('InputContentImagePyramids/' .. arg[1] .. 'l3.jpg', 3)
+content_images[2] = image.load('InputContentImagePyramids/' .. arg[1] .. 'l2.jpg', 3)
+content_images[3] = image.load('InputContentImagePyramids/' .. arg[1] .. 'l1.jpg', 3)
+content_images[4] = image.load('InputContentImagePyramids/' .. arg[1] .. 'l0.jpg', 3)
 
-local style_image = image.load('InputStyleImages/color.jpg', 3)
+local style_image = image.load('InputStyleImages/' .. arg[2] .. '.jpg', 3)
 -- Convert the image to a 512x512 size
 content_images[1] = preproc(image.scale(content_images[1], 512, 'bilinear'))
 content_images[2] = preproc(image.scale(content_images[2], 512, 'bilinear'))
@@ -229,7 +230,11 @@ for i=1, #vggnet do
     end
     if cur_layer.name == content_layers[content_idx] then
       local target = new_net:forward(content_images[content_idx]):clone()
-      local content_loss_module = nn.ContentLoss(target):double()
+      local weight = 5.0
+      -- if content_idx == 4 then
+      --   weight = 20.0
+      -- end
+      local content_loss_module = nn.ContentLoss(target, weight):double()
       if use_gpu == 1 then
         content_loss_module = content_loss_module:cuda()
       end
@@ -290,20 +295,20 @@ function feval(x)
     end
     r_loss = regularize_loss_module.loss
     loss = s_loss + c_loss + r_loss
+    print 'Content Loss'
+    print (c_loss)
+    print 'Style Loss'
+    print (s_loss)
+    print 'Regularize Loss'
+    print (r_loss)
+    print 'Iteration: '
+    print(cur_iter)
+    print 'Total Loss: '
+    print(loss)
     if cur_iter%1000 == 0 then
-      print 'Content Loss'
-      print (c_loss)
-      print 'Style Loss'
-      print (s_loss)
-      print 'Regularize Loss'
-      print (r_loss)
-      print 'Iteration: '
-      print(cur_iter)
-      print 'Total Loss: '
-      print(loss)
       print 'Saving image'
       local res = postproc(new_img:clone():double())
-      local filename = "output-" .. cur_iter .. "-pyr.png" 
+      local filename = "pyramid_" .. arg[1] .. "_" .. arg[2] .. ".jpg"
       image.save(filename, res)
       print 'Completed saving image'
     end

@@ -1,10 +1,11 @@
 import cv2
-import numpy as np,sys
+import numpy as np
+import sys
 
 base_path1 = 'InputContentImages/'
-image_sel = 'brad_pitt.jpg'
+image_sel = sys.argv[1]
 
-A = cv2.imread(base_path1 + image_sel)
+A = cv2.imread(base_path1 + image_sel + '.jpg')
 G = A.copy()
 
 # Create the pyramids

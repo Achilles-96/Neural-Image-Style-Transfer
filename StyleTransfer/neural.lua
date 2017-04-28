@@ -8,8 +8,9 @@ require 'cunn'
 local use_gpu = 1
 local no_content = 0
 
-if #arg > 4:
+if #arg >= 4 then
   no_content = tonumber(arg[4])
+end
 
 -- Define a network which computes the gram matrix
 
@@ -194,6 +195,9 @@ style_layers[4] = 'relu4_1'
 local content_losses = {}
 local style_losses = {}
 local content_idx = 1
+if no_content == 1 then
+  content_idx = 1000
+end
 local style_idx = 1
 
 local tv_loss_module = nn.TVLoss()
@@ -275,17 +279,17 @@ function feval(x)
     end
     r_loss = regularize_loss_module.loss
     loss = s_loss + c_loss + r_loss
+    print 'Content Loss'
+    print (c_loss)
+    print 'Style Loss'
+    print (s_loss)
+    print 'Regularize Loss'
+    print (r_loss)
+    print 'Iteration: '
+    print(cur_iter)
+    print 'Total Loss: '
+    print(loss)
     if cur_iter%1000 == 0 then
-      print 'Content Loss'
-      print (c_loss)
-      print 'Style Loss'
-      print (s_loss)
-      print 'Regularize Loss'
-      print (r_loss)
-      print 'Iteration: '
-      print(cur_iter)
-      print 'Total Loss: '
-      print(loss)
       print 'Saving image'
       local res = postproc(new_img:clone():double())
       local filename = arg[3] 
