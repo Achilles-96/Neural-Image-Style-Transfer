@@ -166,10 +166,10 @@ local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVR
 
 -- Store all the content images from the laplacian stack here
 local content_images = {}
-content_images[1] = image.load('InputContentImagePyramids/brad_pittl0.jpg', 3)
-content_images[2] = image.load('InputContentImagePyramids/brad_pittl1.jpg', 3)
-content_images[3] = image.load('InputContentImagePyramids/brad_pittl2.jpg', 3)
-content_images[4] = image.load('InputContentImagePyramids/brad_pittl3.jpg', 3)
+content_images[1] = image.load('InputContentImagePyramids/brad_pittl3.jpg', 3)
+content_images[2] = image.load('InputContentImagePyramids/brad_pittl2.jpg', 3)
+content_images[3] = image.load('InputContentImagePyramids/brad_pittl1.jpg', 3)
+content_images[4] = image.load('InputContentImagePyramids/brad_pittl0.jpg', 3)
 
 local style_image = image.load('InputStyleImages/color.jpg', 3)
 -- Convert the image to a 512x512 size
@@ -195,6 +195,7 @@ local content_layers = {}
 -- Generally we select the relu layers at the start of the network to apply the style losses
 local style_layers = {}
 
+-- Fine details should be used at initial layers
 content_layers[1] = 'relu2_2'
 content_layers[2] = 'relu3_2'
 content_layers[3] = 'relu4_2'
@@ -302,7 +303,7 @@ function feval(x)
       print(loss)
       print 'Saving image'
       local res = postproc(new_img:clone():double())
-      local filename = "output-" .. cur_iter .. ".png" 
+      local filename = "output-" .. cur_iter .. "-pyr.png" 
       image.save(filename, res)
       print 'Completed saving image'
     end

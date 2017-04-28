@@ -160,7 +160,7 @@ end
 
 local new_net = nn.Sequential()
 local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVRC_19_layers.caffemodel', 'nn'):double()
-local content_image = image.load('InputContentImages/vishal.jpg', 3)
+local content_image = image.load('InputContentImages/brad_pitt.jpg', 3)
 local style_image = image.load('InputStyleImages/color.jpg', 3)
 -- Convert the image to a 512x512 size
 content_image = preproc(image.scale(content_image, 512, 'bilinear'))
