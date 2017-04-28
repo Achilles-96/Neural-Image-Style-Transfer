@@ -1,7 +1,7 @@
 import cv2
 import numpy as np,sys
 
-base_path1 = 'StyleTransfer/InputContentImages/'
+base_path1 = 'InputContentImages/'
 image_sel = 'brad_pitt.jpg'
 
 A = cv2.imread(base_path1 + image_sel)
@@ -23,11 +23,11 @@ for i in xrange(levels-1,0,-1):
     gauss_upscl = cv2.pyrUp(gauss_A[i])
     gauss_upscl = cv2.resize(gauss_upscl, (gauss_A[i-1].shape[1], gauss_A[i-1].shape[0]))
     lap = cv2.subtract(gauss_A[i-1], gauss_upscl)
-    lap = lap * 2.5
+    lap = lap * 2
     lap = cv2.dilate(lap, np.ones((3,3), np.uint8))
     lap_A.append(lap)
 
-base_path2 = 'StyleTransfer/InputContentImagePyramids/'
+base_path2 = 'InputContentImagePyramids/'
 
 for i in xrange(levels):
     cv2.imwrite(base_path2 + image_sel[:-4] + 'g' + str(i) + '.jpg', cv2.resize(gauss_A[i], (A.shape[1], A.shape[0])))

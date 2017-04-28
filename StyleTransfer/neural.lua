@@ -6,6 +6,10 @@ require 'tvloss'
 require 'cunn'
 
 local use_gpu = 1
+local no_content = 0
+
+if #arg > 4:
+  no_content = tonumber(arg[4])
 
 -- Define a network which computes the gram matrix
 
@@ -89,7 +93,7 @@ function StyleLoss:updateGradInput(input, gradOutput)
   -- Backprop the error to get the deltas at the input to the gram matrix (ie the deltas at this StyleLoss layer)
   self.gradInput = self.gram:backward(input, dG)
   -- Add this error to the current error
-  self.gradInput:mul(1e2)
+  self.gradInput:mul(3e2)
   self.gradInput:add(gradOutput)
   return self.gradInput
 end
@@ -98,7 +102,7 @@ function StyleLoss:updateOutput(input)
   local G = self.gram:forward(input)
   G:div(input:nElement())
   self.loss = self.criterion:forward(G, self.target)
-  self.loss = self.loss * 1e2
+  self.loss = self.loss * 3e2
   self.output = input
   return self.output
 end
@@ -160,8 +164,9 @@ end
 
 local new_net = nn.Sequential()
 local vggnet = loadcaffe.load('VGG_ILSVRC_19_layers_deploy.prototxt', 'VGG_ILSVRC_19_layers.caffemodel', 'nn'):double()
-local content_image = image.load('InputContentImages/brad_pitt.jpg', 3)
-local style_image = image.load('InputStyleImages/color.jpg', 3)
+-- First argument is the name of the content image file and the second is the name of the style image file
+local content_image = image.load(arg[1], 3)
+local style_image = image.load(arg[2], 3)
 -- Convert the image to a 512x512 size
 content_image = preproc(image.scale(content_image, 512, 'bilinear'))
 style_image = preproc(image.scale(style_image, 512, 'bilinear'))
@@ -207,7 +212,7 @@ for i=1, #vggnet do
     if use_gpu == 1 then
       new_net = new_net:cuda()
     end
-    if cur_layer.name == content_layers[content_idx] then
+    if no_content == 0 and cur_layer.name == content_layers[content_idx] then
       local target = new_net:forward(content_image):clone()
       local content_loss_module = nn.ContentLoss(target):double()
       if use_gpu == 1 then
@@ -283,7 +288,7 @@ function feval(x)
       print(loss)
       print 'Saving image'
       local res = postproc(new_img:clone():double())
-      local filename = "output-" .. cur_iter .. ".png" 
+      local filename = arg[3] 
       image.save(filename, res)
       print 'Completed saving image'
     end
