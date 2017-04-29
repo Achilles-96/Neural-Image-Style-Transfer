@@ -31,12 +31,12 @@ for i in xrange(levels-1,0,-1):
 base_path2 = 'InputContentImagePyramids/'
 
 for i in xrange(levels):
-    cv2.imwrite(base_path2 + image_sel[:-4] + 'g' + str(i) + '.jpg', cv2.resize(gauss_A[i], (A.shape[1], A.shape[0])))
+    cv2.imwrite(base_path2 + image_sel + 'g' + str(i) + '.jpg', cv2.resize(gauss_A[i], (A.shape[1], A.shape[0])))
     cv2.imshow('Levels Gauss' + str(i), cv2.resize(gauss_A[i], (A.shape[1], A.shape[0])))
     cv2.waitKey(0)
 
 for i in xrange(levels):
-    cv2.imwrite(base_path2 + image_sel[:-4] + 'l' + str(i) + '.jpg', cv2.resize(lap_A[i], (A.shape[1], A.shape[0])))
+    cv2.imwrite(base_path2 + image_sel + 'l' + str(i) + '.jpg', cv2.resize(lap_A[i], (A.shape[1], A.shape[0])))
     cv2.imshow('Levels Lap' + str(i), cv2.resize(lap_A[i], (A.shape[1], A.shape[0])))
     cv2.waitKey(0)
 

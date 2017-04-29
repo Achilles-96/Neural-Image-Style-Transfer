@@ -43,7 +43,7 @@ for color in map_colors:
             else:
                 current_style_map[x][y] = 0.0
 
-    kernel = np.ones((9,9), np.float32) / 81
+    kernel = np.ones((15,15), np.float32) / 225
     current_content_map = cv2.dilate(current_content_map, kernel)
     current_style_map = cv2.dilate(current_style_map, kernel)
     current_content_map = cv2.filter2D(current_content_map, -1, kernel)
