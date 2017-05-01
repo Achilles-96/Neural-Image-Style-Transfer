@@ -2,7 +2,7 @@
 
 ## Vanilla Style Transfer
 
-<img src="StyleTransfer/InputContentImages/brad_pitt.jpg" width=30% align="middle" style="margin:5%;"><img src="StyleTransfer/InputStyleImages/blackwhite.jpg" width=30% align="middle" style="margin:5%;"><img src="StyleTransfer/TestOutputs/FinalOutputs/Test8/output-601.png" width=30% align="middle" style="margin:5%;">
+<img src="StyleTransfer/InputContentImages/brad_pitt.jpg" width=30% align="middle" style="padding:3%;"><img src="StyleTransfer/InputStyleImages/blackwhite.jpg" width=30% align="middle" style="padding:3%;"><img src="StyleTransfer/TestOutputs/FinalOutputs/Test8/output-601.png" width=30% align="middle" style="padding:3%;">
 
 Artistic Neural Style transfer tries to transfer the stylistic details from one image onto the content of another image. This has a wide variety of applications in the domain of computer vision.
 
