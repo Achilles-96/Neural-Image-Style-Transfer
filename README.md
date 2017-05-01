@@ -14,6 +14,8 @@ Artistic Neural Style transfer tries to transfer the stylistic details from one 
 
 | <img src="StyleTransfer/InputContentImages/bear.jpg" width=30% align="middle"> | <img src="StyleTransfer/InputStyleImages/scenery2.jpg" width=30% align="middle"> | <img src="StyleTransfer/TestOutputs/FinalOutputs/Test20/output-1000.png" width=30% align="middle"> |
 
+<hr />
+
 
 ## Localized Style Transfer
 
@@ -27,6 +29,8 @@ A lot of times, we are required to transfer the style of an image to the content
 
 | <img src="StyleTransfer/InputContentImages/Seth.jpg" width=30% align="middle"> | <img src="StyleTransfer/InputStyleImages/Gogh.jpg" width=30% align="middle"> | <img src="StyleTransfer/ExtensionOutputs/Seth_Gogh.jpg" width=30% align="middle"> |
 
+<hr />
+
 
 ## Pyramid based Style Transfer
 
@@ -39,6 +43,8 @@ We have noticed that the content of an image is mainly depicted by the edges and
 | <img src="StyleTransfer/InputContentImages/brad_pitt.jpg" width=30% align="middle"> | <img src="StyleTransfer/InputStyleImages/walk2.jpg" width=30% align="middle"> | <img src="StyleTransfer/ExtensionOutputs/pyramid_brad_pitt_walk2_final.jpg" width=30% align="middle"> |
 
 | <img src="StyleTransfer/InputContentImages/brad_pitt.jpg" width=30% align="middle"> | <img src="StyleTransfer/InputStyleImages/seated-nude.jpg" width=30% align="middle"> | <img src="StyleTransfer/ExtensionOutputs/pyramid_brad_pitt_seated-nude_final.jpg" width=30% align="middle"> |
+
+<hr />
 
 
 #### Note
